@@ -46,7 +46,7 @@ func init() {
 }
 
 func (store hookDataStore) NewUpload(info tusd.FileInfo) (id string, err error) {
-	fmt.Printf("secret: %s\n",string(secret))
+	//fmt.Printf("secret: %s\n",string(secret))
 	
 	sig := info.MetaData["sig"]
 	key := info.MetaData["key"]
