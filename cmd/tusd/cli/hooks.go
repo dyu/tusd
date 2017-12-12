@@ -2,6 +2,10 @@ package cli
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -30,7 +34,65 @@ type hookDataStore struct {
 	tusd.DataStore
 }
 
+var secret []byte
+
+func init() {
+	s := os.Getenv("SIG_SECRET")
+	if s == "" {
+		secret = []byte("!secret!12345678")
+	} else {
+		secret = []byte(s)
+	}
+}
+
 func (store hookDataStore) NewUpload(info tusd.FileInfo) (id string, err error) {
+	fmt.Printf("secret: %s\n",string(secret))
+	
+	sig := info.MetaData["sig"]
+	key := info.MetaData["key"]
+	user := info.MetaData["user"]
+	name := info.MetaData["name"]
+	typ := info.MetaData["type"]
+	
+	if sig == "" || key == "" || user == "" || name == "" || typ == "" {
+		return "", fmt.Errorf("pre-create hook failed: Meta fields sig, key, user, name, type must be provided.\n")
+	}
+	
+	sigBytes, err := base64.StdEncoding.DecodeString(sig)
+	if err != nil {
+		return "", fmt.Errorf("pre-create hook failed: Invalid sig.\n")
+	}
+	
+	keyBytes, err := base64.StdEncoding.DecodeString(key)
+	if err != nil {
+		return "", fmt.Errorf("pre-create hook failed: Invalid key.\n")
+	}
+	
+	bsize := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bsize, uint64(info.Size))
+	
+	var buf bytes.Buffer
+	buf.Write(keyBytes)
+	buf.WriteString(user)
+	buf.WriteString(name)
+	buf.Write(bsize)
+	
+	message := buf.Bytes()
+	
+	hash := hmac.New(sha256.New, secret)
+	hash.Write(message)
+	
+	signed := hash.Sum(nil)
+	
+	if !bytes.Equal(sigBytes, signed) {
+		return "", fmt.Errorf("pre-create hook failed: Unauthorized.\n")
+	}
+	
+	/*
+	b, _ := json.Marshal(info)
+	fmt.Println(string(b))
+	*/
+	
 	if output, err := invokeHookSync(HookPreCreate, info, true); err != nil {
 		return "", fmt.Errorf("pre-create hook failed: %s\n%s", err, string(output))
 	}
