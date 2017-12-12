@@ -47,6 +47,8 @@ func init() {
 
 func (store hookDataStore) NewUpload(info tusd.FileInfo) (id string, err error) {
 	//fmt.Printf("secret: %s\n",string(secret))
+	//b, _ := json.Marshal(info)
+	//fmt.Println(string(b))
 	
 	sig := info.MetaData["sig"]
 	key := info.MetaData["key"]
@@ -87,11 +89,6 @@ func (store hookDataStore) NewUpload(info tusd.FileInfo) (id string, err error) 
 	if !bytes.Equal(sigBytes, signed) {
 		return "", fmt.Errorf("pre-create hook failed: Unauthorized.\n")
 	}
-	
-	/*
-	b, _ := json.Marshal(info)
-	fmt.Println(string(b))
-	*/
 	
 	if output, err := invokeHookSync(HookPreCreate, info, true); err != nil {
 		return "", fmt.Errorf("pre-create hook failed: %s\n%s", err, string(output))
