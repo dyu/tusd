@@ -2,7 +2,6 @@ package: github.com/dyu/tusd
 import:
 - package: cloud.google.com/go
   version: 26aa422484d457ff239d162eda2ecb99881e6b4c
-  repo: https://code.googlesource.com/gocloud
   subpackages:
   - compute/metadata
   - storage
@@ -65,7 +64,6 @@ import:
   - unicode/rangetable
 - package: google.golang.org/api
   version: fbbaff1827317122a8a0e1b24de25df8417ce87b
-  repo: https://code.googlesource.com/google-api-go-client
   subpackages:
   - compute/v1
   - gensupport
