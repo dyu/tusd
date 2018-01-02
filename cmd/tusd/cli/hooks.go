@@ -120,6 +120,10 @@ func SetupPostHooks(handler *tusd.Handler) {
 }
 
 func invokeHook(typ HookType, info tusd.FileInfo) {
+	if !Flags.FileHooksInstalled && !Flags.HttpHooksInstalled {
+		return
+	}
+	
 	go func() {
 		// Error handling is token care of by the function.
 		_, _ = invokeHookSync(typ, info, false)
