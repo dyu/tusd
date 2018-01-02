@@ -82,6 +82,10 @@ imports:
   version: 7da7fe5ea9876f0b178f6462f9ae3f4cfee054c3
   subpackages:
   - coordinate
+- name: github.com/golang/snappy
+  version: 553a641470496b2327abcac10b36396bd98e45c9
+- name: github.com/gorilla/websocket
+  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - name: github.com/jmespath/go-jmespath
   version: dd801d4f4ce7ac746e7e7b4489d2fa600b3b096b
 - name: github.com/matttproud/golang_protobuf_extensions
