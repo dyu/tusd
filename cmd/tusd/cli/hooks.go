@@ -32,6 +32,7 @@ const (
 
 type hookDataStore struct {
 	tusd.DataStore
+	Context *SyncContext
 }
 
 var secret []byte
@@ -96,34 +97,44 @@ func (store hookDataStore) NewUpload(info tusd.FileInfo) (id string, err error) 
 	return store.DataStore.NewUpload(info)
 }
 
-func SetupPreHooks(composer *tusd.StoreComposer) {
+func SetupPreHooks(composer *tusd.StoreComposer, context *SyncContext) {
 	composer.UseCore(hookDataStore{
 		DataStore: composer.Core,
+		Context: context,
 	})
 }
 
-func SetupPostHooks(handler *tusd.Handler) {
+func handleUploaded(info tusd.FileInfo, context *SyncContext) {
+	
+}
+
+func SetupPostHooks(handler *tusd.Handler, context *SyncContext) {
 	go func() {
 		for {
 			select {
 			case info := <-handler.CompleteUploads:
-				invokeHook(HookPostFinish, info)
+				handleUploaded(info, context)
+				if !Flags.FileHooksInstalled && !Flags.HttpHooksInstalled {
+					invokeHook(HookPostFinish, info)
+				}
 			case info := <-handler.TerminatedUploads:
-				invokeHook(HookPostTerminate, info)
+				if !Flags.FileHooksInstalled && !Flags.HttpHooksInstalled {
+					invokeHook(HookPostTerminate, info)
+				}
 			case info := <-handler.UploadProgress:
-				invokeHook(HookPostReceive, info)
+				if !Flags.FileHooksInstalled && !Flags.HttpHooksInstalled {
+					invokeHook(HookPostReceive, info)
+				}
 			case info := <-handler.CreatedUploads:
-				invokeHook(HookPostCreate, info)
+				if !Flags.FileHooksInstalled && !Flags.HttpHooksInstalled {
+					invokeHook(HookPostCreate, info)
+				}
 			}
 		}
 	}()
 }
 
 func invokeHook(typ HookType, info tusd.FileInfo) {
-	if !Flags.FileHooksInstalled && !Flags.HttpHooksInstalled {
-		return
-	}
-	
 	go func() {
 		// Error handling is token care of by the function.
 		_, _ = invokeHookSync(typ, info, false)

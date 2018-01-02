@@ -6,6 +6,13 @@ import (
 )
 
 var Flags struct {
+	SyncAddr     string
+	SyncUri      string
+	SyncDataDir  string
+	SyncInterval int64
+	SyncType     int
+	SyncId       int
+
 	HttpHost          string
 	HttpPort          string
 	MaxSize           int64
@@ -15,7 +22,7 @@ var Flags struct {
 	Timeout           int64
 	S3Bucket          string
 	S3Endpoint        string
-	GCSBucket     	  string
+	GCSBucket         string
 	FileHooksDir      string
 	HttpHooksEndpoint string
 	HttpHooksRetry    int
@@ -30,6 +37,13 @@ var Flags struct {
 }
 
 func ParseFlags() {
+	flag.StringVar(&Flags.SyncAddr, "sync-addr", "localhost:8080", "Host to connect/sync to")
+	flag.StringVar(&Flags.SyncUri, "sync-uri", "/", "http uri")
+	flag.StringVar(&Flags.SyncDataDir, "sync-data-dir", "", "dir where the sync data resides in")
+	flag.Int64Var(&Flags.SyncInterval, "sync-interval", 5, "timer interval in seconds for reconnection")
+	flag.IntVar(&Flags.SyncType, "sync-type", 0, "sync type")
+	flag.IntVar(&Flags.SyncId, "sync-id", 0, "sync id")
+
 	flag.StringVar(&Flags.HttpHost, "host", "0.0.0.0", "Host to bind HTTP server to")
 	flag.StringVar(&Flags.HttpPort, "port", "1080", "Port to bind HTTP server to")
 	flag.Int64Var(&Flags.MaxSize, "max-size", 0, "Maximum size of a single upload in bytes")
@@ -50,6 +64,18 @@ func ParseFlags() {
 	flag.BoolVar(&Flags.BehindProxy, "behind-proxy", false, "Respect X-Forwarded-* and similar headers which may be set by proxies")
 
 	flag.Parse()
+
+	if Flags.SyncDataDir == "" {
+		stderr.Fatalf("The option: -sync-data-dir is required.")
+	}
+
+	if Flags.SyncType == 0 {
+		stderr.Fatalf("The option: -sync-type is required.")
+	}
+
+	if Flags.SyncId == 0 {
+		stderr.Fatalf("The option: -sync-id is required.")
+	}
 
 	if Flags.FileHooksDir != "" {
 		Flags.FileHooksDir, _ = filepath.Abs(Flags.FileHooksDir)
