@@ -22,6 +22,10 @@ func Serve() {
 	var seqReq [13]byte
 	var tsVal [8]byte
 	sc := SyncContext{nil, db, tsVal, seqReq, 0, 0, false}
+	err = sc.init()
+	if err != nil {
+		stderr.Fatal(err)
+	}
 	
 	SetupPreHooks(Composer, &sc)
 
