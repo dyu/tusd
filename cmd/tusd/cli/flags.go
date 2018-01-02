@@ -12,6 +12,7 @@ var Flags struct {
 	SyncInterval int64
 	SyncType     int
 	SyncId       int
+	SyncSecure   bool
 
 	HttpHost          string
 	HttpPort          string
@@ -43,6 +44,7 @@ func ParseFlags() {
 	flag.Int64Var(&Flags.SyncInterval, "sync-interval", 5, "timer interval in seconds for reconnection")
 	flag.IntVar(&Flags.SyncType, "sync-type", 0, "sync type")
 	flag.IntVar(&Flags.SyncId, "sync-id", 0, "sync id")
+	flag.BoolVar(&Flags.SyncSecure, "sync-secure", false, "whether sync connection will be secure")
 
 	flag.StringVar(&Flags.HttpHost, "host", "0.0.0.0", "Host to bind HTTP server to")
 	flag.StringVar(&Flags.HttpPort, "port", "1080", "Port to bind HTTP server to")
