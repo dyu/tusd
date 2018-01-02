@@ -1,4 +1,5 @@
 /main
+/vendor/github.com/dgraph-io/badger
 tusd/data
 cover.out
 data/

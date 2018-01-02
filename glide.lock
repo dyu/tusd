@@ -1,0 +1,250 @@
+hash: b35962e9294e70ced2336ac3870b1b8b9a61889e8c314405c7b4308d32e60868
+updated: 2018-01-02T13:55:44.644908249+08:00
+imports:
+- name: cloud.google.com/go
+  version: 26aa422484d457ff239d162eda2ecb99881e6b4c
+  subpackages:
+  - compute/metadata
+  - iam
+  - internal
+  - internal/optional
+  - internal/version
+  - storage
+- name: github.com/aws/aws-sdk-go
+  version: f865572734bf9830ed50c7ec8b50d472e158e5a0
+  subpackages:
+  - aws
+  - aws/awserr
+  - aws/awsutil
+  - aws/client
+  - aws/client/metadata
+  - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
+  - aws/credentials/endpointcreds
+  - aws/credentials/stscreds
+  - aws/defaults
+  - aws/ec2metadata
+  - aws/endpoints
+  - aws/request
+  - aws/session
+  - aws/signer/v4
+  - internal/shareddefaults
+  - private/protocol
+  - private/protocol/query
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/restxml
+  - private/protocol/xml/xmlutil
+  - service/s3
+  - service/sts
+- name: github.com/beorn7/perks
+  version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
+  subpackages:
+  - quantile
+- name: github.com/bmizerany/pat
+  version: 6226ea591a40176dd3ff9cd8eff81ed6ca721a00
+- name: github.com/dgraph-io/badger
+  version: 69611218c7078be6de16f4ea13fb256e701b6b73
+- name: github.com/go-ini/ini
+  version: 32e4c1e6bc4e7d0d8451aa6b75200d19e37a536a
+- name: github.com/golang/glog
+  version: 23def4e6c14b4da8ac2ed8007337bc5eb5007998
+  repo: https://github.com/golang/glog
+- name: github.com/golang/mock
+  version: bd3c8e81be01eef76d4b503f5e687d2d1354d2d9
+  repo: https://github.com/golang/mock
+  subpackages:
+  - gomock
+- name: github.com/golang/protobuf
+  version: 18c9bb3261723cd5401db4d0c9fbc5c3b6c70fe8
+  repo: https://github.com/golang/protobuf
+  subpackages:
+  - proto
+  - protoc-gen-go/descriptor
+  - ptypes/any
+- name: github.com/googleapis/gax-go
+  version: 317e0006254c44a0ac427cc52a0e083ff0b9622f
+- name: github.com/hashicorp/consul
+  version: b73ad8b68e5052fd7795c3d89dc7c6ebfb30a23c
+  subpackages:
+  - api
+  - lib/freeport
+  - testutil
+  - testutil/retry
+- name: github.com/hashicorp/go-cleanhttp
+  version: d5fe4b57a186c716b0e00b8c301cbd9b4182694d
+- name: github.com/hashicorp/go-rootcerts
+  version: 6bb64b370b90e7ef1fa532be9e591a81c3493e00
+- name: github.com/hashicorp/go-uuid
+  version: 64130c7a86d732268a38cb04cfbaf0cc987fda98
+- name: github.com/hashicorp/serf
+  version: 7da7fe5ea9876f0b178f6462f9ae3f4cfee054c3
+  subpackages:
+  - coordinate
+- name: github.com/jmespath/go-jmespath
+  version: dd801d4f4ce7ac746e7e7b4489d2fa600b3b096b
+- name: github.com/matttproud/golang_protobuf_extensions
+  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
+  subpackages:
+  - pbutil
+- name: github.com/mitchellh/go-homedir
+  version: b8bc1bf767474819792c23f32d8286a45736f1c6
+- name: github.com/mitchellh/go-testing-interface
+  version: a61a99592b77c9ba629d254a693acffaeb4b7e28
+- name: github.com/pkg/errors
+  version: e881fd58d78e04cf6d0de1217f8707c8cc2249bc
+- name: github.com/prometheus/client_golang
+  version: 180b8fdc22b4ea7750bcb43c925277654a1ea2f3
+  subpackages:
+  - prometheus
+- name: github.com/prometheus/client_model
+  version: 99fa1f4be8e564e8a6b613da7fa6f46c9edafc6c
+  subpackages:
+  - go
+- name: github.com/prometheus/common
+  version: 2e54d0b93cba2fd133edc32211dcc32c06ef72ca
+  subpackages:
+  - expfmt
+  - internal/bitbucket.org/ww/goautoneg
+  - model
+- name: github.com/prometheus/procfs
+  version: b15cd069a83443be3154b719d0cc9fe8117f09fb
+  subpackages:
+  - xfs
+- name: github.com/sethgrid/pester
+  version: 760f8913c0483b776294e1bee43f1d687527127b
+- name: github.com/tus/tusd
+  version: ef64437ccc5660d9be6ca1d14c99c2b7d9eeddac
+  subpackages:
+  - cmd/tusd/cli
+  - filestore
+  - gcsstore
+  - limitedstore
+  - memorylocker
+  - prometheuscollector
+  - s3store
+  - uid
+- name: github.com/vimeo/go-util
+  version: 73928214535f1bcf120aa295922d11a88c660abc
+  subpackages:
+  - crc32combine
+- name: go4.org
+  version: cababa4e44509c51b2718c014b5e522659af5d1b
+  repo: https://github.com/camlistore/go4
+  subpackages:
+  - syncutil/singleflight
+- name: golang.org/x/crypto
+  version: c7af5bf2638a1164f2eb5467c39c6cffbd13a02e
+  repo: https://go.googlesource.com/crypto
+  subpackages:
+  - acme
+  - ssh/terminal
+- name: golang.org/x/net
+  version: da118f7b8e5954f39d0d2130ab35d4bf0e3cb344
+  repo: https://go.googlesource.com/net
+  subpackages:
+  - context
+  - context/ctxhttp
+  - http2
+  - http2/hpack
+  - idna
+  - internal/timeseries
+  - lex/httplex
+  - trace
+- name: golang.org/x/oauth2
+  version: a6bd8cefa1811bd24b86f8902872e4e8225f74c4
+  repo: https://go.googlesource.com/oauth2
+  subpackages:
+  - google
+  - internal
+  - jws
+  - jwt
+- name: golang.org/x/sys
+  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
+  repo: https://go.googlesource.com/sys
+  subpackages:
+  - unix
+- name: golang.org/x/text
+  version: 470f45bf29f4147d6fbd7dfd0a02a848e49f5bf4
+  repo: https://go.googlesource.com/text
+  subpackages:
+  - internal/gen
+  - internal/triegen
+  - internal/ucd
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/cldr
+  - unicode/norm
+  - unicode/rangetable
+- name: google.golang.org/api
+  version: fbbaff1827317122a8a0e1b24de25df8417ce87b
+  subpackages:
+  - compute/v1
+  - gensupport
+  - googleapi
+  - googleapi/internal/uritemplates
+  - googleapi/transport
+  - internal
+  - iterator
+  - option
+  - storage/v1
+  - transport
+- name: google.golang.org/appengine
+  version: 170382fa85b10b94728989dfcf6cc818b335c952
+  repo: https://github.com/golang/appengine
+  subpackages:
+  - internal
+  - internal/app_identity
+  - internal/base
+  - internal/datastore
+  - internal/log
+  - internal/modules
+  - internal/remote_api
+  - internal/socket
+  - internal/urlfetch
+  - socket
+  - urlfetch
+- name: google.golang.org/genproto
+  version: 411e09b969b1170a9f0c467558eb4c4c110d9c77
+  repo: https://github.com/google/go-genproto
+  subpackages:
+  - googleapis/api/annotations
+  - googleapis/iam/v1
+  - googleapis/rpc/status
+- name: google.golang.org/grpc
+  version: 0eb507a2ca07f13baf499f89d66cc566bf644643
+  repo: https://github.com/grpc/grpc-go
+  subpackages:
+  - codes
+  - credentials
+  - credentials/oauth
+  - grpclb/grpc_lb_v1
+  - grpclog
+  - internal
+  - keepalive
+  - metadata
+  - naming
+  - peer
+  - stats
+  - status
+  - tap
+  - transport
+- name: gopkg.in/Acconut/lockfile.v1
+  version: ea910fd69bd541bb592c5729c94f595c696413ab
+testImports:
+- name: github.com/davecgh/go-spew
+  version: ecdeabc65495df2dec95d7c4a4c3e021903035e5
+  subpackages:
+  - spew
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib
+- name: github.com/stretchr/testify
+  version: 87b1dfb5b2fa649f52695dd9eae19abe404a4308
+  subpackages:
+  - assert
+- name: gopkg.in/h2non/gock.v1
+  version: 26775f23aa9da4cbd47bc2600a57ac07bbf3bd20
