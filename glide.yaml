@@ -2,6 +2,8 @@ package: github.com/dyu/tusd
 import:
 - package: github.com/dgraph-io/badger
   version: ~1.3.0
+- name: github.com/gorilla/websocket
+  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
 - package: cloud.google.com/go
   version: 26aa422484d457ff239d162eda2ecb99881e6b4c
   subpackages:

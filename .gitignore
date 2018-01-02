@@ -1,5 +1,6 @@
 /main
 /vendor/github.com/dgraph-io/badger
+/vendor/github.com/gorilla/websocket
 tusd/data
 target
 cover.out
