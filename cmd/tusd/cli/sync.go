@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"encoding/binary"
+	"encoding/hex"
 	
 	"log"
 	"net/url"
@@ -17,6 +18,7 @@ import (
 )
 
 var dbuf []byte = make([]byte, 0x1FFFF)
+var zeroVal = []byte("0")
 
 type SyncContext struct {
 	c              *websocket.Conn
@@ -28,10 +30,10 @@ type SyncContext struct {
 	sendOnNextTick bool
 }
 
-func (sc *SyncContext) FillSeqReq(seq uint64, pull bool) {
+func (sc *SyncContext) fillSeqReq(seq uint64) {
 	sc.seqReq[0] = 0x80
 	binary.BigEndian.PutUint16(sc.seqReq[1:], uint16(Flags.SyncId))
-	sc.seqReq[3] = byte(Flags.SyncType)
+	sc.seqReq[3] = byte(Flags.SyncType | 0x80)
 	binary.BigEndian.PutUint64(sc.seqReq[4:], seq)
 	sc.seqReq[12] = 0
 }
@@ -46,13 +48,13 @@ func fillPushKey(key []byte, seq uint64) []byte {
 
 func PutSyncEntry(key []byte, sc *SyncContext) error {
 	return sc.db.Update(func(txn *badger.Txn) error {
-		return txn.Set(key, []byte{0})
+		return txn.Set(key, zeroVal)
 	})
 }
 
-func UpdateSyncEntry(key []byte, sc *SyncContext) error {
+func UpdateSyncEntry(key []byte, id string, sc *SyncContext) error {
 	err := sc.db.Update(func(txn *badger.Txn) error {
-		err := txn.Set(key, []byte{1})
+		err := txn.Set(key, []byte(id))
 		if err == nil {
 			return err
 		}
@@ -68,7 +70,113 @@ func UpdateSyncEntry(key []byte, sc *SyncContext) error {
 }
 
 func handlePayload(data []byte, sc *SyncContext) (err error) {
-	// TODO
+	txn := sc.db.NewTransaction(true)
+	defer txn.Discard()
+	
+	count := binary.LittleEndian.Uint16(data)
+	i := uint16(0)
+	klen := uint16(0)
+	vlen := uint16(0)
+	offset := uint16(2)
+	var failedIdx int = -1
+	var failedKey []byte
+	
+	for ; i < count; i++ {
+		klen = binary.LittleEndian.Uint16(data[offset:])
+		offset += 2
+		vlen = binary.LittleEndian.Uint16(data[offset:])
+		offset += 2
+		
+		key := data[offset:offset + klen]
+		offset += klen
+		val := data[offset:offset + vlen]
+		offset += vlen
+		
+		syncKeyItem, err := txn.Get(val)
+		if err != nil {
+			failedIdx = int(i)
+			failedKey = key
+			break
+		}
+		
+		syncKey, err := syncKeyItem.Value()
+		if err != nil {
+			failedIdx = int(i)
+			failedKey = key
+			break
+		}
+		
+		syncUidItem, err := txn.Get(syncKey)
+		if err != nil {
+			failedIdx = int(i)
+			failedKey = key
+			break
+		}
+		
+		syncUid, err := syncUidItem.Value()
+		if err != nil {
+			failedIdx = int(i)
+			failedKey = key
+			break
+		}
+		
+		prefix := Flags.UploadDir + "/" + string(syncUid)
+		binPath := prefix + ".bin"
+		infoPath := prefix + ".info"
+		
+		_, err = os.Stat(binPath)
+		if os.IsNotExist(err) {
+			// noop
+		} else if nil != os.Remove(binPath) {
+			failedIdx = int(i)
+			failedKey = key
+			err = fmt.Errorf("Could not remove bin: %s", binPath)
+			break
+		}
+		
+		_, err = os.Stat(infoPath)
+		if os.IsNotExist(err) {
+			// noop
+		} else if nil != os.Remove(infoPath) {
+			failedIdx = int(i)
+			failedKey = key
+			err = fmt.Errorf("Could not remove info: %s", infoPath)
+			break
+		}
+		
+		err = txn.Set(key, val)
+		if err != nil {
+			failedIdx = int(i)
+			failedKey = key
+			break
+		}
+	}
+	
+	if failedIdx != -1 {
+		log.Println("Failed on write | key:", hex.Dump(failedKey), 
+				"| seq:", binary.LittleEndian.Uint64(failedKey[4:]))
+		return err
+	}
+	
+	if i == 0 {
+		return err
+	}
+	
+	errCommit := txn.Commit(nil)
+	if errCommit != nil {
+		log.Println("Email sent but failed on commit:", errCommit, "| key:", hex.Dump(failedKey), 
+				"| seq:", binary.LittleEndian.Uint64(failedKey[4:]))
+		return errCommit
+	}
+	
+	sc.seqPull += uint64(i)
+	binary.BigEndian.PutUint64(sc.seqReq[4:], sc.seqPull + 1)
+	
+	if err == nil {
+		// send next batch
+		err = sc.c.WriteMessage(2, sc.seqReq[0:])
+	}
+	
 	return err
 }
 
@@ -183,6 +291,8 @@ func handleConnection(sc *SyncContext) {
 }
 
 func loopConnect(sc *SyncContext) {
+	sc.fillSeqReq(sc.seqPull + 1)
+	
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 	

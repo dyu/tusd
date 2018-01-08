@@ -114,7 +114,7 @@ func handleUploaded(info tusd.FileInfo, context *SyncContext) (err error) {
 	keyBytes, err := base64.StdEncoding.DecodeString(key)
 	
 	if err == nil {
-		err = UpdateSyncEntry(keyBytes, context)
+		err = UpdateSyncEntry(keyBytes, info.ID, context)
 	}
 	
 	return err
