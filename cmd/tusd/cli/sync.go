@@ -143,7 +143,7 @@ func handleConnection(sc *SyncContext) {
 		messageLen := len(message)
 		last := message[messageLen - 1]
 		if 0 == last {
-			if messageLen == 12 {
+			if messageLen == 13 {
 				// send the push entry with the provided key
 				seq = binary.BigEndian.Uint64(message[4:])
 				if sc.seqPush >= seq {
