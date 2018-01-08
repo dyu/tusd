@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 	"encoding/binary"
 	
@@ -27,14 +28,85 @@ type SyncContext struct {
 	sendOnNextTick bool
 }
 
+func (sc *SyncContext) FillSeqReq(seq uint64, pull bool) {
+	sc.seqReq[0] = 0x80
+	binary.BigEndian.PutUint16(sc.seqReq[1:], uint16(Flags.SyncId))
+	sc.seqReq[3] = byte(Flags.SyncType)
+	binary.BigEndian.PutUint64(sc.seqReq[4:], seq)
+	sc.seqReq[12] = 0
+}
+
+func fillPushKey(key []byte, seq uint64) []byte {
+	key[0] = 0x80
+	binary.BigEndian.PutUint16(key[1:], uint16(Flags.SyncId))
+	key[3] = byte(Flags.SyncType)
+	binary.BigEndian.PutUint64(key[4:], seq)
+	return key
+}
+
+func PutSyncEntry(key []byte, sc *SyncContext) error {
+	return sc.db.Update(func(txn *badger.Txn) error {
+		return txn.Set(key, []byte{0})
+	})
+}
+
+func UpdateSyncEntry(key []byte, sc *SyncContext) error {
+	err := sc.db.Update(func(txn *badger.Txn) error {
+		err := txn.Set(key, []byte{1})
+		if err == nil {
+			return err
+		}
+		
+		return txn.Set(fillPushKey(make([]byte, 12), sc.seqPush + 1), key)
+	})
+	
+	if err == nil {
+		sc.seqPush += 1
+	}
+	
+	return err
+}
+
 func handlePayload(data []byte, sc *SyncContext) (err error) {
 	// TODO
 	return err
 }
 
-func sendPushEntry(key []byte, seq uint64, sc *SyncContext) (err error) {
-	// TODO
-	return err
+func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
+	var buf bytes.Buffer
+	key := message[0:len(message) - 1]
+	
+	err := sc.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(key)
+		if err != nil {
+			return err
+		}
+		val, err := item.Value()
+		if err != nil {
+			return err
+		}
+		
+		if len(val) != 9 {
+			return fmt.Errorf("Invalid val length: %d != 9", len(val))
+		}
+		
+		buf.Write(message[0:4]) // header
+		buf.Write(key)
+		buf.Write(val)
+		return err
+	})
+	
+	if err != nil {
+		return err
+	}
+	
+	buf.WriteByte(2) // push payload type
+	payload := buf.Bytes()
+	
+	binary.BigEndian.PutUint16(payload, uint16(len(key)))
+	binary.BigEndian.PutUint16(payload[2:], 9)
+	
+	return sc.c.WriteMessage(2, payload)
 }
 
 func closeConnection(sc *SyncContext) {
@@ -229,10 +301,4 @@ func (sc *SyncContext) init() error {
 	return err
 }
 
-func (sc *SyncContext) FillSeqReq(seq uint64, pull bool) {
-	sc.seqReq[0] = 0x80
-	binary.BigEndian.PutUint16(sc.seqReq[1:], uint16(Flags.SyncId))
-	sc.seqReq[3] = byte(Flags.SyncType)
-	binary.BigEndian.PutUint64(sc.seqReq[4:], seq)
-	sc.seqReq[12] = 0
-}
+

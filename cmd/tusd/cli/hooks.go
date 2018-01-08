@@ -91,6 +91,11 @@ func (store hookDataStore) NewUpload(info tusd.FileInfo) (id string, err error) 
 		return "", fmt.Errorf("pre-create hook failed: Unauthorized.\n")
 	}
 	
+	err = PutSyncEntry(keyBytes, store.Context)
+	if err != nil {
+		return "", err
+	}
+	
 	if output, err := invokeHookSync(HookPreCreate, info, true); err != nil {
 		return "", fmt.Errorf("pre-create hook failed: %s\n%s", err, string(output))
 	}
@@ -104,8 +109,15 @@ func SetupPreHooks(composer *tusd.StoreComposer, context *SyncContext) {
 	})
 }
 
-func handleUploaded(info tusd.FileInfo, context *SyncContext) {
+func handleUploaded(info tusd.FileInfo, context *SyncContext) (err error) {
+	key := info.MetaData["key"]
+	keyBytes, err := base64.StdEncoding.DecodeString(key)
 	
+	if err == nil {
+		err = UpdateSyncEntry(keyBytes, context)
+	}
+	
+	return err
 }
 
 func SetupPostHooks(handler *tusd.Handler, context *SyncContext) {
