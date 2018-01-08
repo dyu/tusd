@@ -113,7 +113,7 @@ func SetupPostHooks(handler *tusd.Handler, context *SyncContext) {
 		for {
 			select {
 			case info := <-handler.CompleteUploads:
-				handleUploaded(info, context)
+				go handleUploaded(info, context)
 				if !Flags.FileHooksInstalled && !Flags.HttpHooksInstalled {
 					invokeHook(HookPostFinish, info)
 				}
