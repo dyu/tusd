@@ -30,11 +30,11 @@ type SyncContext struct {
 	sendOnNextTick bool
 }
 
-func (sc *SyncContext) fillSeqReq(seq uint64) {
+func (sc *SyncContext) initSeqReq() {
 	sc.seqReq[0] = 0x80
 	binary.BigEndian.PutUint16(sc.seqReq[1:], uint16(Flags.SyncId))
 	sc.seqReq[3] = byte(Flags.SyncType | 0x80)
-	binary.BigEndian.PutUint64(sc.seqReq[4:], seq)
+	binary.BigEndian.PutUint64(sc.seqReq[4:], sc.seqPull + 1)
 	sc.seqReq[12] = 0
 }
 
@@ -227,7 +227,9 @@ func handleConnection(sc *SyncContext) {
 	defer closeConnection(sc)
 	//defer close(done)
 	
-	err := sc.c.WriteMessage(2, sc.seqReq[0:])
+	firstMsg := fillPushKey(make([]byte, 13), sc.seqPull + 1)
+	firstMsg[12] = 0
+	err := sc.c.WriteMessage(2, firstMsg)
 	if err != nil {
 		return
 	}
@@ -291,7 +293,7 @@ func handleConnection(sc *SyncContext) {
 }
 
 func loopConnect(sc *SyncContext) {
-	sc.fillSeqReq(sc.seqPull + 1)
+	sc.initSeqReq()
 	
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
