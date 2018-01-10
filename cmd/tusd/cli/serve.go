@@ -23,7 +23,12 @@ func Serve() {
 		
 		var seqReq [13]byte
 		var tsVal [8]byte
-		sc = &SyncContext{nil, db, tsVal, seqReq, 0, 0, false}
+		sc = &SyncContext{
+			db: db,
+			tsVal: tsVal,
+			seqReq: seqReq,
+			chanPush: make(chan bool),
+		}
 		err = sc.init()
 		if err != nil {
 			stderr.Fatal(err)

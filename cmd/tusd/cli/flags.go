@@ -6,14 +6,15 @@ import (
 )
 
 var Flags struct {
-	SyncEnabled  bool
-	SyncAddr     string
-	SyncUri      string
-	SyncDataDir  string
-	SyncInterval int64
-	SyncType     int
-	SyncId       int
-	SyncSecure   bool
+	SyncEnabled        bool
+	SyncAddr           string
+	SyncUri            string
+	SyncDataDir        string
+	SyncInterval       int64
+	SyncPushRetryTicks int
+	SyncType           int
+	SyncId             int
+	SyncSecure         bool
 
 	HttpHost          string
 	HttpPort          string
@@ -43,6 +44,7 @@ func ParseFlags() {
 	flag.StringVar(&Flags.SyncUri, "sync-uri", "/", "http uri")
 	flag.StringVar(&Flags.SyncDataDir, "sync-data-dir", "", "dir where the sync data resides in")
 	flag.Int64Var(&Flags.SyncInterval, "sync-interval", 5, "timer interval in seconds for reconnection")
+	flag.IntVar(&Flags.SyncPushRetryTicks, "sync-push-retry-ticks", 2, "How many interval ticks before sending a sync push")
 	flag.IntVar(&Flags.SyncType, "sync-type", 0, "sync type")
 	flag.IntVar(&Flags.SyncId, "sync-id", 0, "sync id")
 	flag.BoolVar(&Flags.SyncSecure, "sync-secure", false, "whether sync connection will be secure")
@@ -67,7 +69,7 @@ func ParseFlags() {
 	flag.BoolVar(&Flags.BehindProxy, "behind-proxy", false, "Respect X-Forwarded-* and similar headers which may be set by proxies")
 
 	flag.Parse()
-	
+
 	if Flags.SyncDataDir != "" {
 		if Flags.SyncType == 0 {
 			stderr.Fatalf("The option: -sync-type is required.")
@@ -76,10 +78,10 @@ func ParseFlags() {
 		if Flags.SyncId == 0 {
 			stderr.Fatalf("The option: -sync-id is required.")
 		}
-		
+
 		Flags.SyncEnabled = true
 	}
-	
+
 	if Flags.FileHooksDir != "" {
 		Flags.FileHooksDir, _ = filepath.Abs(Flags.FileHooksDir)
 		Flags.FileHooksInstalled = true
