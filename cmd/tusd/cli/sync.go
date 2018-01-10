@@ -34,6 +34,7 @@ type SyncContext struct {
 	sentPush       uint64 // atomic
 	ticksPushRetry int
 	chanPush       chan bool
+	chanClose      chan bool
 	muxUpdate      sync.Mutex
 }
 
@@ -62,9 +63,9 @@ func PutSyncEntry(key []byte, sc *SyncContext) error {
 func UpdateSyncEntry(key []byte, id string, sc *SyncContext) error {
 	sc.muxUpdate.Lock()
 	defer sc.muxUpdate.Unlock()
-	
+
 	seq := atomic.LoadUint64(&sc.seqPush) + 1
-	
+
 	err := sc.db.Update(func(txn *badger.Txn) error {
 		err := txn.Set(key, []byte(id))
 		if err == nil {
@@ -73,7 +74,7 @@ func UpdateSyncEntry(key []byte, id string, sc *SyncContext) error {
 
 		return txn.Set(fillPushKey(make([]byte, 12), seq), key)
 	})
-	
+
 	if err == nil {
 		atomic.StoreUint64(&sc.seqPush, seq)
 		sc.chanPush <- true
@@ -237,9 +238,7 @@ func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
 }
 
 func closeConnection(sc *SyncContext) {
-	c := sc.c
-	sc.c = nil
-	c.Close()
+	sc.chanClose <- true
 }
 
 func handleConnection(sc *SyncContext) {
@@ -335,8 +334,13 @@ func loopConnect(sc *SyncContext) {
 
 	for {
 		select {
+		case <-sc.chanClose:
+			sc.c.Close()
+			sc.c = nil
 		case b := <-sc.chanPush:
-			if !b {
+			if sc.c == nil {
+				// noop
+			} else if !b {
 				_ = sc.c.WriteMessage(2, sc.seqReq[0:])
 			} else {
 				seqSent = atomic.LoadUint64(&sc.sentPush)
@@ -352,7 +356,7 @@ func loopConnect(sc *SyncContext) {
 					sc.sendOnNextTick = false
 					_ = sc.c.WriteMessage(2, sc.seqReq[0:])
 				}
-				
+
 				sc.ticksPushRetry += 1
 				if sc.ticksPushRetry >= Flags.SyncPushRetryTicks {
 					sc.ticksPushRetry = 0
@@ -365,7 +369,7 @@ func loopConnect(sc *SyncContext) {
 				}
 				continue
 			}
-			
+
 			sc.ticksPushRetry = 0
 			c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 			if err == nil {
