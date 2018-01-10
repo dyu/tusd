@@ -10,24 +10,26 @@ import (
 )
 
 func Serve() {
-	opts := badger.DefaultOptions
-	opts.Dir = Flags.SyncDataDir
-	opts.ValueDir = Flags.SyncDataDir
-	db, err := badger.Open(opts)
-	if err != nil {
-		stderr.Fatal(err)
+	var sc *SyncContext = nil
+	if Flags.SyncEnabled {
+		opts := badger.DefaultOptions
+		opts.Dir = Flags.SyncDataDir
+		opts.ValueDir = Flags.SyncDataDir
+		db, err := badger.Open(opts)
+		if err != nil {
+			stderr.Fatal(err)
+		}
+		defer db.Close()
+		
+		var seqReq [13]byte
+		var tsVal [8]byte
+		sc = &SyncContext{nil, db, tsVal, seqReq, 0, 0, false}
+		err = sc.init()
+		if err != nil {
+			stderr.Fatal(err)
+		}
 	}
-	defer db.Close()
-	
-	var seqReq [13]byte
-	var tsVal [8]byte
-	sc := SyncContext{nil, db, tsVal, seqReq, 0, 0, false}
-	err = sc.init()
-	if err != nil {
-		stderr.Fatal(err)
-	}
-	
-	SetupPreHooks(Composer, &sc)
+	SetupPreHooks(Composer, sc)
 
 	handler, err := tusd.NewHandler(tusd.Config{
 		MaxSize:                 Flags.MaxSize,
@@ -49,7 +51,7 @@ func Serve() {
 	stdout.Printf("Using %s as address to listen.\n", address)
 	stdout.Printf("Using %s as the base path.\n", basepath)
 
-	SetupPostHooks(handler, &sc)
+	SetupPostHooks(handler, sc)
 
 	if Flags.ExposeMetrics {
 		SetupMetrics(handler)

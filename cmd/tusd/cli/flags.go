@@ -6,6 +6,7 @@ import (
 )
 
 var Flags struct {
+	SyncEnabled  bool
 	SyncAddr     string
 	SyncUri      string
 	SyncDataDir  string
@@ -66,19 +67,19 @@ func ParseFlags() {
 	flag.BoolVar(&Flags.BehindProxy, "behind-proxy", false, "Respect X-Forwarded-* and similar headers which may be set by proxies")
 
 	flag.Parse()
+	
+	if Flags.SyncDataDir != "" {
+		if Flags.SyncType == 0 {
+			stderr.Fatalf("The option: -sync-type is required.")
+		}
 
-	if Flags.SyncDataDir == "" {
-		stderr.Fatalf("The option: -sync-data-dir is required.")
+		if Flags.SyncId == 0 {
+			stderr.Fatalf("The option: -sync-id is required.")
+		}
+		
+		Flags.SyncEnabled = true
 	}
-
-	if Flags.SyncType == 0 {
-		stderr.Fatalf("The option: -sync-type is required.")
-	}
-
-	if Flags.SyncId == 0 {
-		stderr.Fatalf("The option: -sync-id is required.")
-	}
-
+	
 	if Flags.FileHooksDir != "" {
 		Flags.FileHooksDir, _ = filepath.Abs(Flags.FileHooksDir)
 		Flags.FileHooksInstalled = true

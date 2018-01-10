@@ -91,9 +91,11 @@ func (store hookDataStore) NewUpload(info tusd.FileInfo) (id string, err error) 
 		return "", fmt.Errorf("pre-create hook failed: Unauthorized.\n")
 	}
 	
-	err = PutSyncEntry(keyBytes, store.Context)
-	if err != nil {
-		return "", err
+	if Flags.SyncEnabled {
+		err = PutSyncEntry(keyBytes, store.Context)
+		if err != nil {
+			return "", err
+		}
 	}
 	
 	if output, err := invokeHookSync(HookPreCreate, info, true); err != nil {
@@ -125,7 +127,9 @@ func SetupPostHooks(handler *tusd.Handler, context *SyncContext) {
 		for {
 			select {
 			case info := <-handler.CompleteUploads:
-				go handleUploaded(info, context)
+				if Flags.SyncEnabled {
+					go handleUploaded(info, context)
+				}
 				if !Flags.FileHooksInstalled && !Flags.HttpHooksInstalled {
 					invokeHook(HookPostFinish, info)
 				}
