@@ -111,11 +111,11 @@ func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
 		return err
 	}
 
-	buf.WriteByte(2) // push payload type
+	buf.WriteByte(3) // push payload type
 	payload := buf.Bytes()
 
-	binary.BigEndian.PutUint16(payload, uint16(len(key)))
-	binary.BigEndian.PutUint16(payload[2:], 9)
+	binary.LittleEndian.PutUint16(payload, uint16(len(key)))
+	binary.LittleEndian.PutUint16(payload[2:], 9)
 
 	err = sc.c.WriteMessage(2, payload)
 
