@@ -67,12 +67,13 @@ func UpdateSyncEntry(key []byte, id string, sc *SyncContext) error {
 	seq := atomic.LoadUint64(&sc.seqPush) + 1
 
 	err := sc.db.Update(func(txn *badger.Txn) error {
-		err := txn.Set(key, []byte(id))
+		idBytes := []byte(id)
+		err := txn.Set(key, idBytes)
 		if err != nil {
 			return err
 		}
 
-		return txn.Set(fillPushKey(make([]byte, 12), seq), key)
+		return txn.Set(fillPushKey(make([]byte, 12), seq), append(idBytes, key...))
 	})
 
 	if err == nil {
@@ -86,6 +87,8 @@ func UpdateSyncEntry(key []byte, id string, sc *SyncContext) error {
 func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
 	var buf bytes.Buffer
 	key := message[0 : len(message)-1]
+	
+	var valLen *int
 
 	err := sc.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(key)
@@ -96,11 +99,9 @@ func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
 		if err != nil {
 			return err
 		}
-
-		if len(val) != 9 {
-			return fmt.Errorf("Invalid val length: %d != 9", len(val))
-		}
-
+		
+		*valLen = len(val)
+		
 		buf.Write(message[0:4]) // header
 		buf.Write(key)
 		buf.Write(val)
@@ -115,7 +116,7 @@ func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
 	payload := buf.Bytes()
 
 	binary.LittleEndian.PutUint16(payload, uint16(len(key)))
-	binary.LittleEndian.PutUint16(payload[2:], 9)
+	binary.LittleEndian.PutUint16(payload[2:], uint16(*valLen))
 
 	err = sc.c.WriteMessage(2, payload)
 
