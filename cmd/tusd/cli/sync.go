@@ -364,7 +364,7 @@ func loopConnect(sc *SyncContext) {
 					seqSent = atomic.LoadUint64(&sc.sentPush)
 					seq = atomic.LoadUint64(&sc.ackedPush) + 1
 					// resend if necessary
-					if seq >= seqSent && nil == sendPushEntry(fillPushKey(pushMessage, seq), seq, sc) {
+					if (seq == seqSent || seq <= atomic.LoadUint64(&sc.seqPush)) && nil == sendPushEntry(fillPushKey(pushMessage, seq), seq, sc) {
 						sc.ticksPushRetry = 0
 					} else {
 						sc.ticksPushRetry = Flags.SyncPushRetryTicks - 1
