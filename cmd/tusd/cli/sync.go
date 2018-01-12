@@ -211,7 +211,7 @@ func handlePayload(data []byte, sc *SyncContext) (err error) {
 
 	if failedIdx != -1 {
 		log.Println("Failed on write | key:", hex.Dump(failedKey),
-			"| seq:", binary.LittleEndian.Uint64(failedKey[4:]))
+			"| seq:", binary.BigEndian.Uint64(failedKey[4:]))
 		return err
 	}
 
@@ -222,7 +222,7 @@ func handlePayload(data []byte, sc *SyncContext) (err error) {
 	errCommit := txn.Commit(nil)
 	if errCommit != nil {
 		log.Println("Email sent but failed on commit:", errCommit, "| key:", hex.Dump(failedKey),
-			"| seq:", binary.LittleEndian.Uint64(failedKey[4:]))
+			"| seq:", binary.BigEndian.Uint64(failedKey[4:]))
 		return errCommit
 	}
 
