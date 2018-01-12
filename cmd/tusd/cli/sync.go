@@ -78,7 +78,8 @@ func UpdateSyncEntry(key []byte, id string, sc *SyncContext) error {
 
 	if err == nil {
 		atomic.StoreUint64(&sc.seqPush, seq)
-		sc.chanPush <- true
+		// push on next tick
+		//sc.chanPush <- true
 	}
 
 	return err
@@ -360,12 +361,13 @@ func loopConnect(sc *SyncContext) {
 
 				sc.ticksPushRetry += 1
 				if sc.ticksPushRetry >= Flags.SyncPushRetryTicks {
-					sc.ticksPushRetry = 0
 					seqSent = atomic.LoadUint64(&sc.sentPush)
 					seq = atomic.LoadUint64(&sc.ackedPush) + 1
-					if seq == seqSent {
-						// resend
-						_ = sendPushEntry(fillPushKey(pushMessage, seq), seq, sc)
+					// resend if necessary
+					if seq >= seqSent && nil == sendPushEntry(fillPushKey(pushMessage, seq), seq, sc) {
+						sc.ticksPushRetry = 0
+					} else {
+						sc.ticksPushRetry = Flags.SyncPushRetryTicks - 1
 					}
 				}
 				continue
