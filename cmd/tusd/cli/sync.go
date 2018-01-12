@@ -88,7 +88,7 @@ func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
 	var buf bytes.Buffer
 	key := message[0 : len(message)-1]
 	
-	var valLen *int
+	var valLen int
 
 	err := sc.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(key)
@@ -100,7 +100,7 @@ func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
 			return err
 		}
 		
-		*valLen = len(val)
+		valLen = len(val)
 		
 		buf.Write(message[0:4]) // header
 		buf.Write(key)
@@ -116,7 +116,7 @@ func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
 	payload := buf.Bytes()
 
 	binary.LittleEndian.PutUint16(payload, uint16(len(key)))
-	binary.LittleEndian.PutUint16(payload[2:], uint16(*valLen))
+	binary.LittleEndian.PutUint16(payload[2:], uint16(valLen))
 
 	err = sc.c.WriteMessage(2, payload)
 
