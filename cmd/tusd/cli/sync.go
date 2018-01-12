@@ -68,7 +68,7 @@ func UpdateSyncEntry(key []byte, id string, sc *SyncContext) error {
 
 	err := sc.db.Update(func(txn *badger.Txn) error {
 		err := txn.Set(key, []byte(id))
-		if err == nil {
+		if err != nil {
 			return err
 		}
 
@@ -409,6 +409,12 @@ func (sc *SyncContext) init() error {
 		}
 
 		k := it.Item().Key()
+		
+		if len(k) == 9 {
+			// no sync message received yet
+			return nil
+		}
+		
 		if len(k) != 12 {
 			return fmt.Errorf("Invalid key length: %d", len(k))
 		}
