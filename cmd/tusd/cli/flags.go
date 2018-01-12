@@ -40,8 +40,8 @@ var Flags struct {
 }
 
 func ParseFlags() {
-	flag.StringVar(&Flags.SyncAddr, "sync-addr", "localhost:8080", "Host to connect/sync to")
-	flag.StringVar(&Flags.SyncUri, "sync-uri", "/", "http uri")
+	flag.StringVar(&Flags.SyncAddr, "sync-addr", "", "Host to connect/sync to")
+	flag.StringVar(&Flags.SyncUri, "sync-uri", "", "http uri")
 	flag.StringVar(&Flags.SyncDataDir, "sync-data-dir", "", "dir where the sync data resides in")
 	flag.Int64Var(&Flags.SyncInterval, "sync-interval", 5, "timer interval in seconds for reconnection")
 	flag.IntVar(&Flags.SyncPushRetryTicks, "sync-push-retry-ticks", 2, "How many interval ticks before sending a sync push")
@@ -71,6 +71,14 @@ func ParseFlags() {
 	flag.Parse()
 
 	if Flags.SyncDataDir != "" {
+		if Flags.SyncAddr == "" {
+			stderr.Fatalf("The option: -sync-addr is required.")
+		}
+		
+		if Flags.SyncUri == "" {
+			stderr.Fatalf("The option: -sync-uri is required.")
+		}
+		
 		if Flags.SyncType == 0 {
 			stderr.Fatalf("The option: -sync-type is required.")
 		}
