@@ -83,6 +83,49 @@ func UpdateSyncEntry(key []byte, id string, sc *SyncContext) error {
 	return err
 }
 
+func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
+	var buf bytes.Buffer
+	key := message[0 : len(message)-1]
+
+	err := sc.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get(key)
+		if err != nil {
+			return err
+		}
+		val, err := item.Value()
+		if err != nil {
+			return err
+		}
+
+		if len(val) != 9 {
+			return fmt.Errorf("Invalid val length: %d != 9", len(val))
+		}
+
+		buf.Write(message[0:4]) // header
+		buf.Write(key)
+		buf.Write(val)
+		return err
+	})
+
+	if err != nil {
+		return err
+	}
+
+	buf.WriteByte(2) // push payload type
+	payload := buf.Bytes()
+
+	binary.BigEndian.PutUint16(payload, uint16(len(key)))
+	binary.BigEndian.PutUint16(payload[2:], 9)
+
+	err = sc.c.WriteMessage(2, payload)
+
+	if err == nil {
+		atomic.StoreUint64(&sc.sentPush, seq)
+	}
+
+	return err
+}
+
 func handlePayload(data []byte, sc *SyncContext) (err error) {
 	txn := sc.db.NewTransaction(true)
 	defer txn.Discard()
@@ -189,49 +232,6 @@ func handlePayload(data []byte, sc *SyncContext) (err error) {
 	if err == nil {
 		// send next batch
 		sc.chanPush <- false
-	}
-
-	return err
-}
-
-func sendPushEntry(message []byte, seq uint64, sc *SyncContext) error {
-	var buf bytes.Buffer
-	key := message[0 : len(message)-1]
-
-	err := sc.db.View(func(txn *badger.Txn) error {
-		item, err := txn.Get(key)
-		if err != nil {
-			return err
-		}
-		val, err := item.Value()
-		if err != nil {
-			return err
-		}
-
-		if len(val) != 9 {
-			return fmt.Errorf("Invalid val length: %d != 9", len(val))
-		}
-
-		buf.Write(message[0:4]) // header
-		buf.Write(key)
-		buf.Write(val)
-		return err
-	})
-
-	if err != nil {
-		return err
-	}
-
-	buf.WriteByte(2) // push payload type
-	payload := buf.Bytes()
-
-	binary.BigEndian.PutUint16(payload, uint16(len(key)))
-	binary.BigEndian.PutUint16(payload[2:], 9)
-
-	err = sc.c.WriteMessage(2, payload)
-
-	if err == nil {
-		atomic.StoreUint64(&sc.sentPush, seq)
 	}
 
 	return err
