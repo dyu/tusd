@@ -28,6 +28,7 @@ func Serve() {
 			tsVal: tsVal,
 			seqReq: seqReq,
 			chanPush: make(chan bool),
+			chanClose: make(chan bool),
 		}
 		err = sc.init()
 		if err != nil {

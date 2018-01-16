@@ -390,11 +390,10 @@ func loopConnect(sc *SyncContext) {
 		case <-interrupt:
 			// To cleanly close a connection, a client should send a close
 			// frame and wait for the server to close the connection.
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				//log.Println("write close:", err)
-				return
+			if sc.c != nil {
+				_ = sc.c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			}
+			
 			select {
 			case <-time.After(time.Second):
 			}
