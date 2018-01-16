@@ -153,6 +153,13 @@ func handlePayload(data []byte, sc *SyncContext) (err error) {
 
 		syncKeyItem, err := txn.Get(val)
 		if err != nil {
+			if err == badger.ErrKeyNotFound {
+				// this entry never reached this endpoint
+				err = txn.Set(key, val)
+				if err == nil {
+					continue
+				}
+			}
 			failedIdx = int(i)
 			failedKey = key
 			break
@@ -202,7 +209,7 @@ func handlePayload(data []byte, sc *SyncContext) (err error) {
 			err = fmt.Errorf("Could not remove info: %s", infoPath)
 			break
 		}
-
+		
 		err = txn.Set(key, val)
 		if err != nil {
 			failedIdx = int(i)
@@ -213,7 +220,7 @@ func handlePayload(data []byte, sc *SyncContext) (err error) {
 
 	if failedIdx != -1 {
 		log.Println("Failed on write | key:", hex.Dump(failedKey),
-			"| seq:", binary.BigEndian.Uint64(failedKey[4:]))
+			"| seq:", binary.BigEndian.Uint64(failedKey[4:]), "| err:", err)
 		return err
 	}
 
