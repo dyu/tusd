@@ -13,4 +13,4 @@ fi
 
 cd $SCRIPT_DIR
 
-go build cmd/tusd/main.go && echo ok
+go build $@ cmd/tusd/main.go && echo ok
